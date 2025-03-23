@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dodge the Enemy!</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: black;
+            color: white;
+        }
+
+        #warning {
+            background-color: red;
+            color: white;
+            font-weight: bold;
+            padding: 10px;
+            margin: 10px auto;
+            width: 60%;
+            border-radius: 5px;
+            font-size: 18px;
+        }
+
+        #gameArea {
+            position: relative;
+            width: 300px;
+            height: 500px;
+            background-color: #222;
+            border: 2px solid white;
+            margin: auto;
+            overflow: hidden;
+        }
+        
+        #player {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 30px;
+        }
+        
+        .enemy {
+            position: absolute;
+            font-size: 30px;
+            color: red;  /* 👾 Enemies are now RED */
+            top: 0;
+        }
+
+        #controls {
+            margin-top: 10px;
+        }
+        
+        button {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        #gameOverMessage {
+            display: none;
+            font-size: 24px;
+            color: red;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border: 2px solid white;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Dodge the Enemy! 👾</h1>
+
+    <!-- 🔴 New Warning Message -->
+    <div id="warning">⚠️ Avoid the red enemies (👾)! ⚠️</div>
+
+    <h2>Score: <span id="score">0</span> | Lives: <span id="lives">3</span></h2>
+    
+    <div id="gameArea">
+        <div id="player">🟢</div>
+        <div id="gameOverMessage">GAME OVER! <br> Your Score: <span id="finalScore">0</span> <br> <button onclick="restartGame()">Restart</button></div>
+    </div>
+    
+    <div id="controls">
+        <button onclick="pauseGame()">Pause</button>
+        <button onclick="restartGame()">Restart</button>
+    </div>
+
+    <script>
+        const gameArea = document.getElementById("gameArea");
+        const player = document.getElementById("player");
+        const scoreDisplay = document.getElementById("score");
+        const livesDisplay = document.getElementById("lives");
+        const gameOverMessage = document.getElementById("gameOverMessage");
+        const finalScore = document.getElementById("finalScore");
+
+        let playerPos = gameArea.clientWidth / 2;
+        let gameOver = false;
+        let score = 0;
+        let lives = 3;
+        let gamePaused = false;
+        let enemySpeed = 5;
+
+        document.addEventListener("keydown", (event) => {
+            if (!gamePaused && !gameOver) {
+                if (event.key === "ArrowLeft" && playerPos > 5) {
+                    playerPos -= 20;
+                } else if (event.key === "ArrowRight" && playerPos < gameArea.clientWidth - 30 - 5) {
+                    playerPos += 20;
+                }
+                player.style.left = playerPos + "px";
+            }
+        });
+
+        function createEnemy() {
+            if (gameOver || gamePaused) return;
+
+            const enemy = document.createElement("div");
+            enemy.classList.add("enemy");
+            enemy.textContent = "👾";
+
+            let enemyLeft = Math.random() * (gameArea.clientWidth - 30);
+            enemy.style.left = enemyLeft + "px";
+            enemy.style.top = "0px";
+            gameArea.appendChild(enemy);
+
+            let enemyInterval = setInterval(() => {
+                if (gamePaused || gameOver) return;
+
+                let enemyTop = parseInt(enemy.style.top) || 0;
+                if (enemyTop > 470) {
+                    let playerLeft = parseInt(player.style.left);
+                    if (Math.abs(enemyLeft - playerLeft) < 30) {
+                        lives--;
+                        livesDisplay.textContent = lives;
+                        if (lives === 0) {
+                            endGame();
+                        }
+                    } else {
+                        score += 10;
+                        scoreDisplay.textContent = score;
+                        if (score % 50 === 0) {
+                            enemySpeed += 1;
+                        }
+                    }
+                    enemy.remove();
+                    clearInterval(enemyInterval);
+                } else {
+                    enemy.style.top = enemyTop + enemySpeed + "px";
+                }
+            }, 50);
+
+            setTimeout(createEnemy, Math.random() * 1000 + 500);
+        }
+
+        function endGame() {
+            gameOver = true;
+            gameOverMessage.style.display = "block";
+            finalScore.textContent = score;
+        }
+
+        function pauseGame() {
+            gamePaused = !gamePaused;
+            if (!gamePaused) {
+                createEnemy();
+            }
+        }
+
+        function restartGame() {
+            location.reload();
+        }
+
+        createEnemy();
+    </script>
+
+</body>
+</html>
